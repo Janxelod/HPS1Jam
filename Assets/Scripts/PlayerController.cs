@@ -25,6 +25,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float runningSpeed = 2f;
 
+    [SerializeField]
+    private float verticalThreshold = 0.3f;
+
     private void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -45,22 +48,25 @@ public class PlayerController : MonoBehaviour
         bool isRotating = (horizontal != 0f);
         bool isMoving = (vertical != 0f);
         bool isRunning = (run != 0f);
+        bool isMovingForward = Mathf.Sign(vertical) > 0f;
 
         animatorController?.SetBool("IsWalking", isRotating || isMoving);
-        animatorController?.SetBool("IsRunning", isRunning);
+        animatorController?.SetBool("IsRunning", isRunning && isMovingForward);
 
         if (isRotating)
         {
             transform.Rotate(Vector3.up, Mathf.Sign(horizontal) * rotateSpeed * Time.deltaTime);
         }
 
-        if(isMoving)
+        if(isMoving && Mathf.Abs(vertical) > verticalThreshold)
         {
             //Vector3 move = transform.forward * vertical;
             //float movementSpeed = (isRunning) ? runningSpeed : walkingSpeed;
 
             //transform.Translate(Mathf.Sign(vertical) * transform.forward * Time.deltaTime * movementSpeed);
-            float movementSpeed = (isRunning) ? runningSpeed : walkingSpeed;
+            
+            float movementSpeed = (isRunning && isMovingForward) ? runningSpeed : walkingSpeed;
+            movementSpeed = isMovingForward ? movementSpeed : movementSpeed * .75f; // reduce speed if it's not moving forward
             GetComponent<Rigidbody>().MovePosition(transform.position + Mathf.Sign(vertical) * transform.forward * Time.deltaTime * movementSpeed);
         }
 
